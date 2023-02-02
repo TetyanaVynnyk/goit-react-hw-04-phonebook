@@ -1,0 +1,14 @@
+.filterLabel {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+.filterInput {
+    width: 50vh;
+}
+
+.filterInput:hover {
+    border-color: aqua;
+}

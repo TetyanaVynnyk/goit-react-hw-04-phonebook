@@ -1,0 +1,30 @@
+.formWrapper {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 25px;
+}
+
+.inputTitle {
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.formInput {
+    width: 50vh;
+    margin-bottom: 10px;
+}
+
+.formInput:hover {
+    border-color: aqua;
+}
+
+.btn {
+    width: 25vh;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn:hover,
+.btn:focus {
+    background-color: aqua;
+}
