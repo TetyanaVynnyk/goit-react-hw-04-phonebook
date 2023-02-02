@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 
 import { nanoid } from 'nanoid';
 
@@ -6,80 +6,90 @@ import ContactForm from './ContactForm';
 import ContactList from './ContactList';
 import Filter from './Filter';
 
-class Phonebook extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
-
-  componentDidMount() {
+const Phonebook = () => {
+  const [contacts, setContacts] = useState(() => {
     const contacts = JSON.parse(localStorage.getItem('my-contacts'));
-    if (contacts) {
-      this.setState({ contacts });
-    }
-  }
+    return contacts ? contacts : [];
+  });
+  const [filter, setFilter] = useState('');
 
-  componentDidUpdate(prevProps, prevState) {
-    const { contacts } = this.state;
-    if (prevState.contacts!==contacts) {
-      localStorage.setItem('my-contacts', JSON.stringify(contacts));
-    }
-  }
+  useEffect(() => {
+    localStorage.setItem('my-contacts', JSON.stringify(contacts));
+  }, [contacts]);
 
-  addContact = contact => {
-    const auditName = this.state.contacts.find(
-      e => e.name.toLowerCase() === contact.name.toLowerCase()
+  const isDublicate = name => {
+    const normalizedName = name.toLowerCase();
+    const result = contacts.find(({ name }) => {
+      return name.toLowerCase() === normalizedName;
+    });
+
+    return Boolean(result);
+  };
+
+  const addContact = ({ name, number }) => {
+    if (isDublicate(name)) {
+      alert(`${name} is already in contacts.`);
+      return false;
+    }
+
+    setContacts(prevContacts => {
+      const newContact = {
+        id: nanoid(),
+        name,
+        number,
+      };
+      return [newContact, ...prevContacts];
+    });
+    return true;
+  };
+
+  const deleteContact = id => {
+    setContacts(prevContacts =>
+      prevContacts.filter(contact => contact.id !== id)
     );
-    if (auditName) return alert(auditName.name + ' is already in contacts.');
-
-    contact.id = nanoid();
-    this.setState(prevState => ({
-      contacts: [contact, ...prevState.contacts],
-    }));
   };
 
-  changeFilter = e => {
-    this.setState({ filter: e.currentTarget.value });
+  const changeFilter = ({ target }) => {
+    setFilter(target.value);
   };
 
-  getVisibleContacts = () => {
-    const { filter, contacts } = this.state;
+  const getVisibleContacts = () => {
+    if (!filter) {
+      return contacts;
+    }
+
     const normalizedFilter = filter.toLowerCase();
+    const result = contacts.filter(({ name, number }) => {
+      return (
+        name.toLowerCase().includes(normalizedFilter) ||
+        number.toLowerCase().includes(normalizedFilter)
+      );
+    });
 
-    return contacts.filter(contact =>
-      contact.name.toLowerCase().includes(normalizedFilter)
-    );
+    return result;
   };
 
-  deleteContact = contactId => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== contactId),
-    }));
-  };
+  const visibleContacts = getVisibleContacts();
+  const isContacts = Boolean(visibleContacts.length);
 
-  render() {
-    const { filter } = this.state;
-    const visibleContact = this.getVisibleContacts();
-
-    return (
-      <div>
-        <h1>Phonebook</h1>
-        <ContactForm onSubmit={this.addContact} />
-        <h2>Contacts</h2>
-        {visibleContact.length ? (
-          <div>
-            <Filter value={filter} changeFilter={this.changeFilter} />
-            <ContactList
-              contacts={visibleContact}
-              onDeleteContacts={this.deleteContact}
-            />
-          </div>
-        ) : (
-          <p>You have no contacts</p>
-        )}
-      </div>
-    );
-  }
-}
+  return (
+    <div>
+      <h1>Phonebook</h1>
+      <ContactForm onSubmit={addContact} />
+      <h2>Contacts</h2>
+      {isContacts ? (
+        <div>
+          <Filter value={filter} changeFilter={changeFilter} />
+          <ContactList
+            contacts={visibleContacts}
+            onDeleteContacts={deleteContact}
+          />
+        </div>
+      ) : (
+        <p>You have no contacts</p>
+      )}
+    </div>
+  );
+};
 
 export default Phonebook;
